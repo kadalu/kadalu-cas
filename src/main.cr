@@ -3,6 +3,8 @@ require "yaml"
 
 require "kemal"
 
+require "./routes"
+
 config_file = ""
 
 struct CasOptions
@@ -42,5 +44,36 @@ end
 
 opts = CasOptions.from_yaml(File.read(config_file))
 
-Kemal.config.port = opts.port
-Kemal.run
+def unauthorized(env, message)
+  env.response.status_code = 401
+  env.response.content_type = "application/json"
+  env.response.print ({"error": "Unauthorized. #{message}"}).to_json
+end
+
+class AuthHandler < Kemal::Handler
+  exclude ["/ping"], "GET"
+
+  def call(env)
+    return call_next(env) if exclude_match?(env)
+
+    auth = env.request.headers["Authorization"]?
+
+    return unauthorized(env, "Authorization is not set") if auth.nil?
+
+    bearer, _, token = auth.partition(" ")
+    if bearer.downcase != "bearer" || token == ""
+      return unauthorized(env, "Invalid Authoriation header")
+    end
+
+    env.set("token", token)
+
+    call_next(env)
+  end
+end
+
+add_handler AuthHandler.new
+
+Kemal.run do |config|
+  server = config.server.not_nil!
+  server.bind_tcp "0.0.0.0", opts.port, reuse_port: true
+end
