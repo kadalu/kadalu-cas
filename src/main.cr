@@ -1,20 +1,11 @@
 require "option_parser"
-require "yaml"
 
 require "kemal"
 
 require "./routes"
+require "./cas_options"
 
 config_file = ""
-
-struct CasOptions
-  include YAML::Serializable
-
-  property port = 3001, admins = [] of String, readers = [] of String
-
-  def initialize
-  end
-end
 
 OptionParser.parse do |parser|
   parser.banner = "Usage: kadalu-cas CONFIG_FILE [arguments]"
@@ -42,7 +33,7 @@ if config_file == ""
   exit 1
 end
 
-opts = CasOptions.from_yaml(File.read(config_file))
+CasOptions.options = CasOptions::Options.from_yaml(File.read(config_file))
 
 def unauthorized(env, message)
   env.response.status_code = 401
@@ -75,5 +66,5 @@ add_handler AuthHandler.new
 
 Kemal.run do |config|
   server = config.server.not_nil!
-  server.bind_tcp "0.0.0.0", opts.port, reuse_port: true
+  server.bind_tcp "0.0.0.0", CasOptions.options.port, reuse_port: true
 end
