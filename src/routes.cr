@@ -50,3 +50,14 @@ post "/*" do |env|
   env.response.content_type = "application/json"
   {:hash => hash}.to_json
 end
+
+get "/*" do |env|
+  filename = env.request.path.lstrip("/")
+  if /^[a-f0-9]{64}$/i =~ filename
+    path = File.join [CasOptions.options.rootdir, "hashes", filename]
+  else
+    path = File.join [CasOptions.options.rootdir, "files", filename]
+  end
+
+  send_file env, path
+end
