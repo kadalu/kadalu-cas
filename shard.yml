@@ -1,0 +1,18 @@
+name: kadalu-cas
+version: 0.1.0
+
+authors:
+  - Aravinda Vishwanathapura <aravinda@kadalu.tech>
+
+description: |
+  Content Addressable Storage using Kadalu Storage
+
+targets:
+  kadalu-cas:
+    main: src/main.cr
+
+dependencies:
+  kemal:
+    github: kemalcr/kemal
+
+license: AGPL-3.0
