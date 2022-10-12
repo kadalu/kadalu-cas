@@ -48,14 +48,13 @@ class AuthHandler < Kemal::Handler
     return call_next(env) if exclude_match?(env)
 
     auth = env.request.headers["Authorization"]?
-
-    return unauthorized(env, "Authorization is not set") if auth.nil?
-
-    bearer, _, token = auth.partition(" ")
-    if bearer.downcase != "bearer" || token == ""
-      return unauthorized(env, "Invalid Authoriation header")
+    token = ""
+    unless auth.nil?
+      bearer, _, token = auth.partition(" ")
+      if bearer.downcase != "bearer" || token == ""
+        return unauthorized(env, "Invalid Authoriation header")
+      end
     end
-
     env.set("token", token)
 
     call_next(env)
