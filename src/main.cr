@@ -61,8 +61,26 @@ class AuthHandler < Kemal::Handler
   end
 end
 
+class APILogHandler < Kemal::BaseLogHandler
+  def initialize
+    @handler = HTTP::LogHandler.new
+  end
+
+  def call(context : HTTP::Server::Context)
+    @handler.next = @next
+    @handler.call(context)
+  end
+
+  def write(message : String)
+    Log.info { message.strip }
+  end
+end
+
+Kemal.config.logger = APILogHandler.new
 add_handler AuthHandler.new
 
+Kemal.config.app_name = "Kadalu CAS"
+Kemal.config.powered_by_header = false
 Kemal.run do |config|
   server = config.server.not_nil!
   server.bind_tcp "0.0.0.0", CasOptions.options.port, reuse_port: true
